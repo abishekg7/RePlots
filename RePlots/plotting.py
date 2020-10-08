@@ -5,7 +5,7 @@ import cartopy
 def setup_map(ax=None, proj=None, land=True, coast=True, 
               rivers=False, states=False, 
               top_labels=False, bottom_labels=True, left_labels=True, right_labels=False,
-              infer_intervals=True, robust=True, levels=None, title=None
+              infer_intervals=True, robust=True, levels=None, title=None,
               transform=None):
     '''Plot var on lon/lat map with projection.
         
