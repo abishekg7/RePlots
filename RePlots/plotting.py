@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
 import cartopy
 
 
@@ -6,7 +7,7 @@ def setup_map(ax=None, proj=None, land=True, coast=True,
               rivers=False, states=False, 
               top_labels=False, bottom_labels=True, left_labels=True, right_labels=False,
               infer_intervals=True, robust=True, levels=None, title=None,
-              transform=None):
+              transform=None, extent=None, xticks=None, yticks=None):
     '''Plot var on lon/lat map with projection.
         
     Inputs
@@ -51,6 +52,12 @@ def setup_map(ax=None, proj=None, land=True, coast=True,
         is PlateCarree and does not need to be input. See cartopy documentation for options. 
         Example:
         >>> transform = cartopy.crs.PlateCarree()
+    extent: list
+        Extent of plot view [left longitude, right longitude, bottom latitude, top latitude]
+    xticks: sequence
+        Longitudes to label with x ticks.
+    yticks: sequence
+        Latitudes to label with y ticks.
     '''
     
     if ax is None:
@@ -60,7 +67,7 @@ def setup_map(ax=None, proj=None, land=True, coast=True,
         assert isinstance(proj,cartopy.crs.Projection), 'input "proj" must be a `cartopy` projection.'
         
     if transform is not None:
-        assert isinstance(proj,cartopy.crs.Projection), 'input "transform" must be a `cartopy` projection.'
+        assert isinstance(transform,cartopy.crs.Projection), 'input "transform" must be a `cartopy` projection.'
     
     # store arguments for use after this function is called
     pargs = {}  # arguments to go into subsequent plot call
@@ -73,7 +80,7 @@ def setup_map(ax=None, proj=None, land=True, coast=True,
     if land:
         ax.add_feature(cartopy.feature.LAND.with_scale('110m'), facecolor='0.8')
     if coast:
-        ax.add_feature(cartopy.feature.COASTLINE.with_scale('10m'), edgecolor='0.2')
+        ax.add_feature(cartopy.feature.COASTLINE.with_scale('110m'), edgecolor='0.2')
     if rivers:
         ax.add_feature(cartopy.feature.RIVERS.with_scale('110m'), edgecolor='b')
     if states:
@@ -82,8 +89,9 @@ def setup_map(ax=None, proj=None, land=True, coast=True,
     if title is not None:
         ax.set_title(title)
         pargs['add_labels'] = False  # don't override axis and colorbar labeling in call to plot
-        
-    pargs['ax'] = ax
+    
+    if extent is not None:
+        ax.set_extent(extent)
 
     gl = ax.gridlines(draw_labels=True, x_inline=False, y_inline=False)#, xlocs=np.arange(-104,-80,2))
 
@@ -92,7 +100,15 @@ def setup_map(ax=None, proj=None, land=True, coast=True,
     gl.right_labels = right_labels
     gl.bottom_labels = bottom_labels
     gl.left_labels = left_labels
+    
+    if xticks is not None:
+        gl.xlocator = mticker.FixedLocator(xticks)
+    if yticks is not None:
+        gl.ylocator = mticker.FixedLocator(yticks)
     oargs['gl'] = gl
+
+    pargs['x'] = 'longitude'
+    pargs['y'] = 'latitude'
         
     pargs['infer_intervals'] = infer_intervals
     pargs['robust'] = robust
@@ -103,6 +119,8 @@ def setup_map(ax=None, proj=None, land=True, coast=True,
     if transform is None:
         transform=cartopy.crs.PlateCarree()
     pargs['transform'] = transform  # map projection that plot data is in. Assumed lon/lat or PlateCarree.
+        
+    pargs['ax'] = ax
 
     return pargs, oargs
 
