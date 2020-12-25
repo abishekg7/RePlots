@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+
+<config_definition>
+
+<!-- ======================================================================= -->
+<!-- env_postprocess.xml                                                     -->
+<!-- ======================================================================= -->
+
+
+<!-- standalone postprocessing directory (True or False) -->
+<entry id="STANDALONE" value="TRUE" />
+
+
+  
+    
+  
+    
+  
+    
+       
+    
+  
+    
+<!-- ======================================================================= -->
+<!--  -->
+<!-- ======================================================================= -->
+       
+<!-- Description: location of caseroot directory on local disk. CASEROOT is the same as PP_CASE_PATH for stand-alone postprocessing cases --> 
+<entry id="CASEROOT" value="./" />
+       
+<!-- Description: post processing directory location on local machine where cesm-env2 python virtualenv is located. --> 
+<entry id="POSTPROCESS_PATH" value="/home/abishekg/PycharmProjects/RePlots/templates" />
+       
+    
+  
+
+<!-- ====================================== -->
+</config_definition>

@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+
+<config_definition version="1.0">
+
+  <!-- ======================================================================= -->
+  <!-- env_postprocess.xml                                                     -->
+  <!-- ======================================================================= -->
+
+  <groups>
+    <group name="case_info">
+      <order>0</order>
+      <comment>Environment variable settings associated with the case to be post-processed.</comment>
+
+      <entry id="CASEROOT"
+	     type="string"
+	     valid_values=""  
+	     value="inherit"
+	     group="case_info"
+	     desc="location of caseroot directory on local disk. CASEROOT is the same as PP_CASE_PATH for stand-alone postprocessing cases"
+	     ></entry> 
+
+
+
+      <entry id="POSTPROCESS_PATH"
+	     type="string"
+	     valid_values=""  
+	     value="inherit"
+	     group="case_info"
+	     desc="post processing directory location on local machine where cesm-env2 python virtualenv is located."
+	     ></entry> 
+
+
+    </group>
+
+  </groups>
+  <!-- End postprocessing configuration definitions -->
+</config_definition>
