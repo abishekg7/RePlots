@@ -1,28 +1,22 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 """Base class for ocean diagnostics
 """
-from __future__ import print_function
-
 import sys
 
-if sys.hexversion < 0x02070000:
+# check the system python version and require 3.5.x or greater
+if not (sys.implementation.version.major==3 and sys.implementation.version.minor >=5):
     print(70 * "*")
-    print("ERROR: {0} requires python >= 2.7.x. ".format(sys.argv[0]))
+    print("ERROR: {0} requires python >= 3.5.x. ".format(sys.argv[0]))
     print("It appears that you are running python {0}".format(
-        ".".join(str(x) for x in sys.version_info[0:3])))
+            ".".join(str(x) for x in sys.version_info[0:3])))
     print(70 * "*")
     sys.exit(1)
 
 import errno
 import os
 import traceback
+from utils import diagUtilsLib
 
-# import the MPI related modules
-from asaptools import partition, simplecomm, vprinter, timekeeper
-
-# import the helper utility modules
-from cesm_utils import cesmEnvLib
-from diag_utils import diagUtilsLib
 
 class OceanDiagnostic(object):
     """This is the base class defining the common interface for all
@@ -31,7 +25,6 @@ class OceanDiagnostic(object):
     def __init__(self):
         self._name = 'Base'
         self._title = 'Base'
-        self.scomm = ''
 
     def name(self):
         return self._name

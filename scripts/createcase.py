@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import sys
 
 # check the system python version and require 3.5.x or greater
@@ -35,10 +37,10 @@ try:
 except:
     import xml.etree.ElementTree as etree
 
-if sys.version_info[0] == 2:
-    from ConfigParser import SafeConfigParser as config_parser
-else:
-    from configparser import ConfigParser as config_parser
+#if sys.version_info[0] == 2:
+#    from ConfigParser import SafeConfigParser as config_parser
+#else:
+from configparser import ConfigParser as config_parser
 
 
 # -------------------------------------------------------------------------------
@@ -94,18 +96,18 @@ class xmlpost:
         """
         group_list = list()
         sorted_group_list = list()
-
+        print('test1')
         xml_tree = etree.ElementTree()
         # print ('creating configFile = {0}'.format(configFile))
         xml_tree.parse(configFile)
-
+        print('test2')
         for group_tag in xml_tree.findall('./groups/group'):
             xml_list = list()
             group_dict = dict()
             name = group_tag.get('name')
             order = int(group_tag.find('order').text)
             comment = group_tag.find('comment').text
-
+            print('test2b')
             for entry_tag in group_tag.findall('entry'):
                 # check if the value needs to be inherited from the envDict
                 if entry_tag.get('value') == 'inherit':
@@ -118,8 +120,10 @@ class xmlpost:
             group_dict = {'order': order, 'name': name, 'comment': comment, 'xml_list': xml_list}
             group_list.append(group_dict)
 
-        sorted_group_list = sorted(group_list, key=itemgetter('order'))
+        print('test3a')
 
+        sorted_group_list = sorted(group_list, key=itemgetter('order'))
+        print('test3')
         # add an additional entry for machine dependent input observation files root path
         xml_list = list()
         if obs_root:
@@ -143,3 +147,23 @@ class xmlpost:
         # write the env_file
         with open(envFile, 'w') as xml:
             xml.write(env_tmpl)
+
+
+if __name__ == "__main__":
+
+    try:
+        homedir = '..'
+        config_file = homedir + '/templates/config_postprocess.xml'
+        tmpl_file = 'env_postprocess.tmpl'
+        env_file = './env_postprocess.xml'
+        envDict = dict()
+        envDict['MACH'] = 'test'
+        envDict['POSTPROCESS_PATH'] = homedir + '/templates'
+        envDict['CASEROOT'] = './'
+        envDict['CASEROOT'] = './'
+        xmlpost.create_env_file(envDict=envDict, configFile=config_file, tmplFile=tmpl_file,
+                                envFile=env_file, obs_root='', comp='', standalone=True)
+
+    except Exception as error:
+        print(str(error))
+        sys.exit(1)

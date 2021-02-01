@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 """Generate ocean climatology average files for a given CESM case 
 
 This script provides an interface between:
@@ -13,7 +13,6 @@ Created on October 28, 2014
 Author: CSEG <cseg@cgd.ucar.edu>
 """
 
-from __future__ import print_function
 import sys
 
 # check the system python version and require 2.7.x or greater
@@ -452,14 +451,14 @@ def main(options, main_comm, debugMsg):
     envDict = dict()
 
     # CASEROOT is given on the command line as required option --caseroot
-    if main_comm.is_manager():
+
         caseroot = options.caseroot[0]
         debugMsg('caseroot = {0}'.format(caseroot), header=True)
         debugMsg('calling initialize_envDict', header=True)
         envDict = initialize_envDict(envDict, caseroot, debugMsg, options.standalone)
 
     # broadcast envDict to all tasks
-    envDict = main_comm.partition(data=envDict, func=partition.Duplicate(), involved=True)
+
     sys.path.append(envDict['PATH'])
     main_comm.sync()
 

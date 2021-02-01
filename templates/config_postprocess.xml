@@ -14,12 +14,18 @@
       <entry id="CASEROOT"
 	     type="string"
 	     valid_values=""  
-	     value="inherit"
+	     value="./"
 	     group="case_info"
 	     desc="location of caseroot directory on local disk. CASEROOT is the same as PP_CASE_PATH for stand-alone postprocessing cases"
 	     ></entry> 
 
-
+		<entry id="CASENAME"
+	     type="string"
+	     valid_values=""
+	     value="cmpr_GOM_9k_nature_copernicus"
+	     group="case_info"
+	     desc="case name"
+	     ></entry>
 
       <entry id="POSTPROCESS_PATH"
 	     type="string"
@@ -27,10 +33,208 @@
 	     value="inherit"
 	     group="case_info"
 	     desc="post processing directory location on local machine where cesm-env2 python virtualenv is located."
-	     ></entry> 
+	     ></entry>
 
+		 <entry id="GENERATE_DIAGS_ATM"
+	     type="logical"
+	     valid_values="TRUE,FALSE"
+	     value="TRUE"
+	     group="case_info"
+	     desc="If TRUE, this calls the atm_diagnostics script with launches the  AMWG diagnostics package parallel python wrapper script atm_diags_generator.py to generate climatological plots associated with the run job output. See the AMWG diagnostics documentation for more details. Settings for creating the diagnostics are specified in the env_diags_atm.xml file."
+	     ></entry>
 
+		<entry id="GENERATE_DIAGS_OCN"
+	     type="logical"
+	     valid_values="TRUE,FALSE"
+	     value="TRUE"
+	     group="case_info"
+	     desc="If TRUE, this calls the atm_diagnostics script with launches the  AMWG diagnostics package parallel python wrapper script atm_diags_generator.py to generate climatological plots associated with the run job output. See the AMWG diagnostics documentation for more details. Settings for creating the diagnostics are specified in the env_diags_atm.xml file."
+	     ></entry>
+
+		<entry id="DOUT_PATHS"
+	     type="string"
+	     valid_values="[]"
+	     value="/datasets/GOM_9k_nature_copernicus"
+	     group="case_info"
+	     desc="location of caseroot directory on local disk. CASEROOT is the same as PP_CASE_PATH for stand-alone postprocessing cases"
+	     ></entry>
     </group>
+
+
+
+
+    <group name="ocn_diag">
+      <order>1</order>
+      <comment>Environment variable settings for model case option for the pyAverager tool.</comment>
+
+	   <entry id="OCN_GRID"
+	     type="string"
+	     valid_values="gx1v6"
+	     value="gx1v6"
+	     group="ocn_diag"
+	     desc="Ocean model grid"
+	     ></entry>
+
+      <entry id="OCN_MODELCASE_VARLIST"
+	     type="char"
+	     valid_values="[]"
+	     value="temp,salt,rho,u,v,w"
+	     group="ocn_diag"
+	     desc="Model case pyAverager comma separated variable list to include in climatology files. An empty string defaults to all variables."
+	     ></entry>
+
+	  <entry id="OCN_MODELCASE_SUBDIR"
+	     type="char"
+             valid_values="/hist, /proc/tseries/month_1, /proc/tseries/monthly"
+             value=""
+             group="ocn_diag"
+             desc="subdir path concatenated to $DOUT_S_ROOT/ocn pointing to input history files, slice or series"
+             ></entry>
+
+		<entry id="OCN_SUFFIX"
+	     type="char"
+             valid_values="ocn.hi.,ocn."
+             value="ocn.hi."
+             group="ocn_diag"
+             desc="subdir path concatenated to $DOUT_S_ROOT/ocn pointing to input history files, slice or series"
+             ></entry>
+
+	<entry id="OCN_YEAR0"
+	     type="integer"
+	     valid_values=""
+	     value=""
+	     group="ocn_diag"
+	     desc="Model start year is used to match history time-slice or variable time-series year designations to begin accumulating averages and calculating diagnostic values."
+	     ></entry>
+
+      <entry id="OCN_YEAR1"
+	     type="integer"
+	     valid_values=""
+	     value=""
+	     group="ocn_diag"
+	     desc="Model end year is used to match history time-slice or variable time-series year designations to end accumulating averages and calculating diagnostic values."
+	     ></entry>
+
+
+      <entry id="OCN_CNTRLCASEDIR"
+	     type="char"
+	     valid_values=""
+	     value=""
+	     group="ocn_diag"
+	     desc="Local directory path to control model DOUT_S_ROOT path for OMWG model vs. control diagnostics."
+	     ></entry>
+
+      <entry id="OCN_CNTRLCASE_SUBDIR"
+	     type="char"
+             valid_values="/hist, /proc/tseries/month_1, /proc/tseries/monthly"
+             value="/hist"
+             group="ocn_diag"
+             desc="subdir path concatenated to $OCN_CNTRLCASEDIR/ocn  pointing to input history files, slice or series"
+             ></entry>
+
+
+      <entry id="OCN_CNTRLRESOLUTION"
+	     type="char"
+	     valid_values=""
+	     value="$OCN_GRID"
+	     group="ocn_diag"
+	     desc="Control model resolution used with OMWG model vs. control diagnostics"
+	     ></entry>
+
+      <entry id="OCN_CNTRLYEAR0"
+	     type="integer"
+	     valid_values=""
+	     value=""
+	     group="ocn_diag"
+	     desc="Control Model start year is used to match history time-slice or variable time-series year designations to begin accumulating averages and calculating diagnostic values."
+	     ></entry>
+
+      <entry id="OCN_CNTRLYEAR1"
+	     type="integer"
+	     valid_values=""
+	     value=""
+	     group="ocn_diag"
+	     desc="Control Model end year is used to match history time-slice or variable time-series year designations to end accumulating averages and calculating diagnostic values."
+	     ></entry>
+    </group>
+
+
+	 <group name="atm_diag">
+      <order>2</order>
+      <comment>Environment variable settings to control postprocessing tasks. These variables are used by the cylc workflow manager and the copy_html utility.</comment>
+
+      <entry id="ATM_GRID"
+	     type="string"
+	     valid_values="0.9x1.25"
+	     value="ne30"
+	     group="atm_diag"
+	     desc="Atmosphere model grid"
+	     ></entry>
+	</group>
+
+
+
+		 <group name="lnd_diag">
+      <order>3</order>
+      <comment>Environment variable settings to control postprocessing tasks. These variables are used by the cylc workflow manager and the copy_html utility.</comment>
+
+		 <entry id="LND_GRID"
+	     type="string"
+	     valid_values="0.9x1.25"
+	     value="ne30"
+	     group="lnd_diag"
+	     desc="Land model grid"
+	     ></entry>
+
+
+	</group>
+
+
+
+	 <group name="plot_options">
+      <order>4</order>
+      <comment>Environment variable settings related to NCL.</comment>
+
+      <entry id="OCN_CNTRLVLS"
+	     type="char"
+	     valid_values="std,gokhan,gauss"
+	     value="std"
+	     group="plot_options"
+	     desc="contour level options (std, gokhan, gauss)"
+	     ></entry>
+
+      <entry id="OCN_XYRANGE"
+	     type="integer list"
+	     valid_values="[0-360],[0-720],[-90-90],[-90-90]"
+	     value="30,390,-90,90"
+	     group="plot_options"
+	     desc="Comma separated list of integers defining plot x and y ranges in degrees (x0,x1,y0,y1)"
+	     ></entry>
+
+      <entry id="OCN_DEPTHS"
+	     type="integer list"
+	     valid_values=""
+	     value="0,50,100,200,300,500,1000,1500,2000,2500,3000,3500,4000"
+	     group="plot_options"
+	     desc="Comma separated list of depths in kilometers for plot averages."
+	     ></entry>
+
+      <entry id="OCN_IMAGEFORMAT"
+	     type="char"
+	     valid_values="ps, pdf, eps, x11, png"
+	     value="png"
+	     group="plot_options"
+	     desc="Output image format supported by viewing in web browsers. Only ps will be converted to png for display on the web."
+	     ></entry>
+
+      <entry id="PROJECTION"
+	     type="char"
+	     valid_values=""
+	     value="Lambert"
+	     group="plot_options"
+	     desc="General NCL settings for all plotting routines"
+	     ></entry>
+</group>
 
   </groups>
   <!-- End postprocessing configuration definitions -->
