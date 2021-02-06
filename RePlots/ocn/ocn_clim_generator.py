@@ -52,6 +52,11 @@ def buildOcnAvgList(start_year, stop_year, tavgdir, logger):
     avgList (list) - list of averages to be passed to the pyaverager
     """
     avgList = []
+    #TODO: polish this
+
+    # clean out the old working plot files from the workdir
+    if env['CLEANUP_FILES'].upper() in ['T', 'TRUE']:
+        cesmEnvLib.purge(env['WORKDIR'], '.*\.pro')
 
     # check if mavg file already exists
     avgFile = '{0}/mavg.{1}-{2}.nc'.format(tavgdir, start_year, stop_year)
@@ -75,14 +80,14 @@ def buildOcnAvgList(start_year, stop_year, tavgdir, logger):
 # ========================================================================
 # callPyAverager - create the climatology files by calling the pyAverager
 # ========================================================================
-def callXarrayAverager(dataset, tavgdir, case_prefix, varlist,
-                   time_dim, avgtype, diag_obs_root, netcdf_format, nlev, logger):
+def callXarrayAverager(dataset, climdir, case_prefix, varlist, time_dim,
+                       avgtype, diag_obs_root, netcdf_format, logger):
     """setup the pyAverager specifier class with specifications to create
        the climatology files in parallel.
 
        Arguments:
        dataset (dataset) - dataset object
-       tavgdir (string) - output directory for climatology files
+       climdir (string) - output directory for climatology files
        case_prefix (string) - input filename prefix
        varlist (list) - list of variables. Note: an empty list implies all variables.
        time_dim (string) - time dimension to group by
@@ -108,9 +113,7 @@ def callXarrayAverager(dataset, tavgdir, case_prefix, varlist,
 
 
     logger.debug('calling specification.create_specifier with following args')
-    #logger.debug('... in_directory = {0}'.format(in_dir))
-    logger.debug('... out_directory = {0}'.format(tavgdir))
-    logger.debug('... prefix = {0}'.format(case_prefix))
+    logger.debug('... out_directory = {0}'.format(climdir))
     logger.debug('... suffix = {0}'.format(suffix))
     logger.debug('... date_pattern = {0}'.format(date_pattern))
     logger.debug('... weighted = {0}'.format(wght))
@@ -118,11 +121,11 @@ def callXarrayAverager(dataset, tavgdir, case_prefix, varlist,
     logger.debug('... varlist = {0}'.format(varlist))
     logger.debug('... serial = {0}'.format(serial))
     logger.debug('... clobber = {0}'.format(clobber))
-    logger.debug('... nlev = {0}'.format(nlev))
+
 
     try:
 
-        if avgtype is "time":
+        if avgtype == "time":
             logger.debug("calling mean")
             if not varlist:
                 ds_clim = dataset.ds.mean('{0}'.format(time_dim))
@@ -135,7 +138,11 @@ def callXarrayAverager(dataset, tavgdir, case_prefix, varlist,
             else:
                 ds_clim = dataset.ds[varlist].groupby('{0}.{1}'.format(time_dim, avgtype)).mean('{0}'.format(time_dim))
 
-        ds_clim.to_netcdf(path='./all.nc', mode='w', format='NETCDF4', compute=True)
+        for ii in ds_clim.data_vars:
+            if 'grid' in ds_clim[ii].attrs: del ds_clim[ii].attrs['grid']
+
+        path = '{0}/{1}.{2}.nc'.format(climdir, case_prefix, avgtype)
+        ds_clim.to_netcdf(path=path, mode='w', format='NETCDF4', compute=True)
 
     except Exception as error:
         print(str(error))
@@ -146,8 +153,8 @@ def callXarrayAverager(dataset, tavgdir, case_prefix, varlist,
 # =========================================================================
 # createClimFiles - create the climatology files by calling the pyAverager
 # =========================================================================
-def createClimFiles(dataset, start_year, stop_year, in_dir, htype, tavgdir, case, inVarList,
-                    diag_obs_root, netcdf_format, nlev, logger):
+def createClimFiles(dataset, start_year, stop_year, climdir, case, avglist,
+                    inVarList, diag_obs_root, netcdf_format, logger):
     """setup the pyAverager specifier class with specifications to create
        the climatology files in parallel.
 
@@ -156,8 +163,9 @@ def createClimFiles(dataset, start_year, stop_year, in_dir, htype, tavgdir, case
        stop_year (integer) - ending year for diagnositcs
        in_dir (string) - input directory with either history time slice or variable time series files
        htype (string) - 'series' or 'slice' depending on input history file type
-       tavgdir (string) - output directory for averages
+       climdir (string) - output directory for averages
        case (string) - case name
+       avglist (list) -
        inVarList (list) - if empty, then create climatology files for all vars, RHO, SALT and TEMP
        diag_obs_root (string) - OCNDIAG_DIAGOBSROOT machine dependent path to input data root
        netcdf_format (string) - OCNDIAG_netcdf_format one of ['netcdf', 'netcdf4', 'netcdf4c', 'netcdfLarge']
@@ -165,19 +173,19 @@ def createClimFiles(dataset, start_year, stop_year, in_dir, htype, tavgdir, case
 
     """
     # create the list of averages to be computed
-    avgFileBaseName = '{0}/{1}.pop.h'.format(tavgdir, case)
+    avgFileBaseName = '{0}/{1}.pop.h'.format(climdir, case)
     case_prefix = '{0}.pop.h'.format(case)
     averageList = []
     avgList = []
 
     # create the list of averages to be computed by the pyAverager
-    averageList = buildOcnAvgList(start_year, stop_year, tavgdir, logger.debug)
+    #averageList = buildOcnAvgList(start_year, stop_year, climdir, logger.debug)
 
     # if the averageList is empty, then all the climatology files exist with all variables
-    for avgtype in averageList:
+    for avgtype in avglist:
 
         logger.debug('Calling xarray Averager with averageList = {0}'.format(avgList))
         logger.debug(' and inVarList = {0}'.format(inVarList))
-        callXarrayAverager(dataset=dataset, tavgdir=tavgdir, case_prefix=case_prefix, varList=inVarList,
+        callXarrayAverager(dataset=dataset, climdir=climdir, case_prefix=case_prefix, varlist=inVarList,
                            time_dim='ocean_time', avgtype=avgtype, diag_obs_root=diag_obs_root,
-                           netcdf_format=netcdf_format, nlev=nlev, logger=logger)
+                           netcdf_format=netcdf_format, logger=logger)

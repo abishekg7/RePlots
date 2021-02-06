@@ -3,9 +3,9 @@
 """Top-level module for mycustomproject ."""
 from pkg_resources import DistributionNotFound, get_distribution
 
-#from . import cesmEnvLib
+from . import cesmEnvLib
 from .customLogger import CustomLogger
-#from . import diagUtilsLib
+from . import diagUtilsLib
 
 try:
     __version__ = get_distribution(__name__).version

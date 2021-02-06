@@ -2,6 +2,7 @@ import xroms
 import dask_mpi
 from dask.distributed import Client
 #from dask_jobqueue import LSFCluster
+#from utils import CustomLogger
 from distributed import Client
 
 
@@ -28,7 +29,7 @@ class dataset():
         client = None
 
         if cluster_type == 'MPI':
-            dask_mpi.initialize()
+            #dask_mpi.initialize()
             client = Client()
         elif cluster_type == 'LSF':
             # TODO: see if this is required

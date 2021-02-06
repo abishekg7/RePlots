@@ -15,8 +15,8 @@ import shutil
 import subprocess
 import sys
 import time
-
-import cesmEnvLib
+import datetime
+from utils import cesmEnvLib
 
 #=======================================================================
 # check_ncl_nco - check if NCL and NCO/ncks are installed and accessible
@@ -27,7 +27,7 @@ def check_ncl_nco(envDict):
     Arguments:
     envDict (dictionary) - environment dictionary
     """
-
+    #TODO: convert this to check xarray/dask?
     cmd = ['ncl', '-V']
     try:
         pipe = subprocess.Popen(cmd, env=envDict)
@@ -47,34 +47,6 @@ def check_ncl_nco(envDict):
         print('ERROR: {0} call to "{1}" failed with error:'.format('check_ncl_nco', ' '.join(cmd)))
         print('    {0} - {1}'.format(e.errno, e.strerror))
         sys.exit(1)
-
-#============================================================
-# generate_ncl_plots - call a nclPlotFile via subprocess call
-#============================================================
-def generate_ncl_plots(env, nclPlotFile):
-    """generate_plots_call - call a nclPlotFile via subprocess call
-
-    Arguments:
-    env (dictionary) - diagnostics system environment 
-    nclPlotFile (string) - ncl plotting file name
-    """
-    # check if the nclPlotFile exists - 
-    # don't exit if it does not exists just print a warning.
-    nclFile = '{0}/{1}'.format(env['NCLPATH'],nclPlotFile)
-    print('Calling NCL routine {0} from {1}'.format(nclFile, env['WORKDIR']))
-    rc, err_msg = cesmEnvLib.checkFile(nclFile, 'read')
-    if rc:
-        try:
-            pipe = subprocess.Popen(['ncl {0}'.format(nclFile)], cwd=env['WORKDIR'], env=env, shell=True, stdout=subprocess.PIPE)
-            output = pipe.communicate()[0]
-            print('NCL routine {0} \n {1}'.format(nclFile,output))            
-            while pipe.poll() is None:
-                time.sleep(0.5)
-        except OSError as e:
-            print('WARNING',e.errno,e.strerror)
-    else:
-        print('{0}... continuing with additional NCL calls.'.format(err_msg))
-    return 0
 
 
 #============================================
@@ -107,9 +79,30 @@ def strip_prefix(indict, prefix):
 #=============================================================
 # filter_pick - return filenames that match a pattern in a list
 #=============================================================
-def filter_pick(files,regex):
+def filter_pick(files, regex):
     return [m.group(0) for f in files for m in [regex.search(f)] if m]
 
+
+#=============================================================
+# filter_pick - return filenames that match a pattern in a list
+#=============================================================
+def filter_dates(files, si, ei, sdate, edate, date_pattern):
+    date_regex = "%Y-%m-%d"
+    default_regex = "%Y-%m-%d"
+    start_date = datetime.datetime.strptime(sdate, date_pattern)
+    end_date = datetime.datetime.strptime(edate, date_pattern)
+
+
+    list = []
+
+    for file in files:
+        split_str = file[si:ei]
+        date = datetime.datetime.strptime(split_str, date_regex)
+
+        if date >= start_date and date <= end_date:
+            list.append(file)
+
+    return list
 
 #======================================
 # check_series_years - checks to see if the number of time slices in the file
@@ -273,7 +266,7 @@ def checkHistoryFiles(tseries, dout_s_root, case, rstart_year, rstop_year, comp,
 # ========================================
 # checkHistoryFiles - check history files
 # ========================================
-def getFileGlob(dout_paths, casename, rstart_year, rstop_year, comp, suffix, filep, subdir):
+def getFileGlob(dout_paths, casename, comp, suffix, filep, subdir, start_date, end_date, date_pattern):
     """checkHistoryFiles - check if variable history time-series
     files or history time-slice files exist
     in the DOUT_S_ROOT location. Then check the actual run files
@@ -304,46 +297,55 @@ def getFileGlob(dout_paths, casename, rstart_year, rstop_year, comp, suffix, fil
     if subdir.endswith('/'):
         subdir = subdir[:-1]
 
+
+
     for dout_path in dout_paths:
 
-        in_dir = '{0}/{1}/{2}'.format(dout_path, comp, subdir)
-
+        #in_dir = '{0}/{1}/{2}'.format(dout_path, comp, subdir)
+        in_dir = '{0}/{1}/'.format(dout_path, subdir)
+        print('in_dir:{0}'.format(in_dir))
         # check the in_dir directory exists
         if not os.path.isdir(in_dir):
             err_msg = 'ERROR: diagUtilsLib.getFileGlob {0} directory is not available.'.format(in_dir)
             raise OSError(err_msg)
 
         # get the file paths and formats - TO DO may need to get this from namelist var or env_archive
-        files = '{0}.{1}'.format(casename, suffix)
+        files = '{0}.{1}.{2}'.format(casename, comp, suffix)
         fformat = '{0}/{1}*'.format(in_dir, files)
+
 
         #if htype == 'slice':
         # get the first and last years from the first and last monthly history files
         allHfiles = sorted(glob.glob(fformat))
-        if len(allHfiles) > 0:
-            pattern = re.compile(filep)
-            hfiles = filter_pick(allHfiles, pattern)
 
-            if hfiles:
-                files_out.extend(hfiles)
-            else:
-                print(
-                    'ERROR diagUtilsLib.checkHistoryFiles: No history time slice files found matching pattern = {0}'.format(
-                        pattern))
-                sys.exit(1)
+        if len(allHfiles) > 0:
+            #TODO: figure out pattern and regular expressions
+            #pattern = re.compile(filep)
+            #hfiles = filter_pick(allHfiles, pattern)
+            #allHfiles = list(filter(lambda x: x[starti:endi] > '20100301', allHfiles))
+
+            # TODO: does this need to be more generic?
+            starti = len(os.path.dirname(allHfiles[0])) + 2 + len(files)
+            endi = starti + 10
+            allHfiles = filter_dates(allHfiles, starti, endi, start_date, end_date, date_pattern)
+            files_out.extend(allHfiles)
+            #if hfiles:
+            #    files_out.extend(hfiles)
+            #else:
+            #    print(
+            #        'ERROR diagUtilsLib.checkHistoryFiles: No history time slice files found matching pattern = {0}'.format(
+            #            pattern))
+            #    sys.exit(1)
         else:
             print('ERROR diagUtilsLib.checkHistoryFiles: No history time slice files found matching format {0}'.format(
                 fformat))
             sys.exit(1)
 
-
-
     # check if the XML YEAR0 and YEAR1 are within the actual start_year and stop_year bounds
     # defined by the actual history files
     #start_year, stop_year = checkXMLyears(hfstart_year, hfstop_year, rstart_year, rstop_year)
 
-
-    return hfiles
+    return files_out
 
 
 #==============================================================================
@@ -358,36 +360,6 @@ def write_web_file(out_file, comp, key, value):
         f.write('{0}:{1}\n'.format(key, value))
     f.close()
 
-#==============================================================================
-# create_za - generate the ocean global zonal average file used for most of the plots
-#==============================================================================
-def create_za(workdir, tavgfile, gridfile, toolpath, env):
-    """generate the global zonal average file used for most of the plots
-    """
-    # generate the global zonal average file used for most of the plots
-    zaFile = '{0}/za_{1}'.format(workdir, tavgfile)
-    rc, err_msg = cesmEnvLib.checkFile(zaFile, 'read')
-    if not rc:
-        # check that the za executable exists
-        zaCommand = '{0}/za'.format(toolpath)
-        rc, err_msg = cesmEnvLib.checkFile(zaCommand, 'exec')
-        if not rc:
-            print('ERROR: create_za failed to verify executable za command = {0}'.format(zaCommand))
-            print('    {0}'.format(err_msg))
-        
-        # call the za fortran code from within the workdir
-        cwd = os.getcwd()
-        os.chdir(workdir)
-        testCmd = '{0} -O -time_const -grid_file {1} {2}'.format(zaCommand,gridfile,tavgfile)
-        print('Ocean zonal average command = {0}'.format(testCmd))
-        try:
-            subprocess.check_call(['{0}'.format(zaCommand), '-O', '-time_const', '-grid_file', '{0}'.format(gridfile), '{0}'.format(tavgfile)])
-        except subprocess.CalledProcessError as e:
-            print('ERROR: create_za subprocess call to {0} failed with error:'.format(e.cmd))
-            print('    {0} - {1}'.format(e.returncode, e.output))
-
-        print('zonal average created')
-        os.chdir(cwd)
 
 
 #==========================================================
@@ -523,104 +495,3 @@ def checkAvgFiles(filelist):
     """
     rc = True
     return rc
-
-#======================================================================
-# Function to regrid the atm climatology files
-#======================================================================
-def atm_regrid(climo_file, regrid_script, in_grid, out_grid, env):
-    """ Regrid the climatology file that was passed in
-    """
-    if '30' in in_grid:
-       in_grid = '30'
-    elif '120' in in_grid:
-       in_grid = '120'
-    elif '240' in in_grid:
-       in_grid = '240'
-    else:
-        raise RuntimeError('The in grid resolution is not a valid option: ',in_grid)
-
-    se_file = climo_file[:-3] + '_r_' + in_grid + climo_file[-3:] # Create a new name for the existing se climo file
-    env['INGRID'] = in_grid
-    env['OUTGRID'] = out_grid
-
-    # Move the existing file to a new name
-    shutil.move(climo_file, se_file)    
- 
-    env['TEST_INPUT'] = se_file
-    env['TEST_PLOTVARS'] = climo_file
-
-    # Stringify the env dictionary
-    env_copy = env.copy()
-    for name,value in env_copy.iteritems():
-        env_copy[name] = str(value)
-
-    # Call ncl to regrid the climo file
-    generate_ncl_plots(env_copy,regrid_script)
-
-
-#======================================================================
-# Function to regrid the lnd climatology files
-#======================================================================
-def lnd_regrid(climo_file, regrid_script, t, outdir, ext_dir, env):
-    """ Regrid the climatology file that was passed in 
-    """
-    # move the climo file into the tmp_outdir in order to run
-    # in parallel and avoid conflicts with duplicate temp file name from ESMF
-    print('DEBUG in diagUtilsLib.lnd_regrid')
-    tmp_outdir = '{0}/{1}'.format(outdir, ext_dir)
-    os.rename(outdir+'/'+climo_file, tmp_outdir+'/'+climo_file)
-
-    env['method']   = env['method_'+t]
-    env['wgt_dir']  = env['wgt_dir_'+t]
-    env['wgt_file'] = env['old_res_'+t]+'_to_'+env['new_res_'+t]+'.'+env['method_'+t]+'.nc'
-    env['area_dir'] = env['area_dir_'+t]
-    env['area_file']= env['new_res_'+t]+'_area.nc' 
-    env['procDir']  = tmp_outdir
-    env['oldres']   = env['old_res_'+t]
-    env['newres']   = env['new_res_'+t]
-    env['InFile']   = os.path.basename(climo_file)
-    env['OutFile']  = env['new_res_'+t]+'_'+os.path.basename(climo_file)
-    env['newfn']    = env['old_res_'+t]+'_'+os.path.basename(climo_file)
-
-    # store some directory state variables to allow for working in the tmp_outdir
-    env['WORKDIR'] = tmp_outdir
-    current_dir = os.getcwd()
-    os.chdir(tmp_outdir)
-     
-    # Stringify the env dictionary
-    env_copy = env.copy()
-    for name,value in env_copy.iteritems():
-        env_copy[name] = str(value)
-
-    # Call ncl to regrid the climo file
-    generate_ncl_plots(env_copy,regrid_script)
-
-    # move files back to their original locations
-    in_f = os.path.basename(climo_file)
-    os.rename(tmp_outdir+'/'+in_f, outdir+'/'+env['oldres']+in_f)
-    os.rename(tmp_outdir+'/'+env['OutFile'], outdir+'/'+in_f)
-
-    # restore the working dir
-    os.chdir(current_dir)
-
-    # add the area variable back into the regridded file
-    try:
-        print('DEBUG lnd_regrid: Adding area variable back to regridded file')
-        print('DEBUG lnd_regrid: ncks command - ncks -A -v area {0}/{1} {2}/{3}'.format(env['area_dir'], env['area_file'], outdir, in_f))
-        pipe = subprocess.Popen(['ncks -A -v area {0}/{1} {2}/{3}'.format(env['area_dir'], env['area_file'], outdir, in_f)], cwd=outdir, env=env_copy, shell=True, stdout=subprocess.PIPE)
-        output = pipe.communicate()[0]
-        while pipe.poll() is None:
-            time.sleep(0.5)
-    except OSError as e:
-        print('WARNING lnd_regrid',e.errno,e.strerror)
-
-    # remove the tmp_outdir if it is empty
-    try:
-        os.rmdir(tmp_outdir)
-    except OSError as e:
-        if e.errno == errno.ENOTEMPTY:
-            print('WARNING lnd_regrid: {0} directory not empty - not removed.'.format(tmp_outdir))
-    
-
-    
-
