@@ -143,11 +143,14 @@ class ModelPlots(OceanDiagnostic):
 
                 plot.check_prerequisites(env)
 
-                plot.generate_plots(env)
+                tasks = plot.generate_plots(env)
 
             except RuntimeError as e:
                 print(e)
                 print("model vs. obs - Skipped '{0}' and continuing!".format(requested_plot))
+
+
+        dask.compute(tasks, scheduler='processes', num_workers=4)
 
         # initialize OrderedDict with plot_order list entries as key
         html_order = collections.OrderedDict()
