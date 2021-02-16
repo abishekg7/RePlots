@@ -124,13 +124,13 @@ def setup_map(ax=None, proj=None, land=True, coast=True,
 
     # Add natural features
     if land:
-        ax.add_feature(cartopy.feature.LAND.with_scale('110m'), facecolor='0.8')
+        ax.add_feature(cartopy.feature.LAND.with_scale('10m'), facecolor='0.8')
     if coast:
-        ax.add_feature(cartopy.feature.COASTLINE.with_scale('110m'), edgecolor='0.2')
+        ax.add_feature(cartopy.feature.COASTLINE.with_scale('10m'), edgecolor='0.2')
     if rivers:
-        ax.add_feature(cartopy.feature.RIVERS.with_scale('110m'), edgecolor='b')
+        ax.add_feature(cartopy.feature.RIVERS.with_scale('10m'), edgecolor='b')
     if states:
-        ax.add_feature(cartopy.feature.STATES.with_scale('110m'), edgecolor='k')
+        ax.add_feature(cartopy.feature.STATES.with_scale('10m'), edgecolor='k')
     
     if subargs is not None:
         assert 'label' in subargs, 'need "label" in subargs'

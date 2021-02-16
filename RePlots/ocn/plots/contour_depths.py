@@ -36,13 +36,14 @@ import xcmocean
 from RePlots.ocn.plots.ocn_diags_plot_bc import OceanDiagnosticPlot
 import RePlots.plotting as rplt
 
-class SurfaceFields_model(OceanDiagnosticPlot):
+class ContourDepths_model(OceanDiagnosticPlot):
     """Detailed description of the plot that will show up in help documentation
     """
 
     def __init__(self):
-        super(SurfaceFields_model, self).__init__()
-        self._expectedPlots = ['sustr', 'svstr', 'zeta']
+        super(ContourDepths_model, self).__init__()
+        self._expectedPlots = ['salt', 'temp', 'rho', 'u', 'v', 'w']
+        self._depths = ['0m', '50m', '100m', '200m', '300m', '500m', '1000m', '1500m', '2000m', '2500m', '3000m', '3500m', '4000m']
         #self._expectedPlots = [ 'SSH', 'HBLT', 'HMXL', 'DIA_DEPTH', 'TLT', 'INT_DEPTH', 'SU', 'SV', 'BSF' ]
         #self._expectedPlots_za = [ 'SSH_GLO_za', 'HBLT_GLO_za', 'HMXL_GLO_za', 'DIA_DEPTH_GLO_za', 'TLT_GLO_za', 'INT_DEPTH_GLO_za' ]
 
@@ -76,6 +77,7 @@ class SurfaceFields_model(OceanDiagnosticPlot):
             #SST = ds['temp'].cf.isel(Z=-1, ocean_time=0)
             #var = dataset.ds[plot].isel(ocean_time=0)
             var = dataset.ds[plot].mean('ocean_time')
+            var = xroms.isoslice(depths, iso_array=varin.z_rho0)
             # Could use var.name for fig name
             # and vaz.attrs['long_name'] for title
             delayed_task = self.lazy_plots(env, var, name=var.name, title=var.attrs['long_name'])
@@ -84,14 +86,11 @@ class SurfaceFields_model(OceanDiagnosticPlot):
         return tasks
 
     @dask.delayed
-    def lazy_plots(self, env, var, name, title, var2=None, compare=False):
+    def lazy_plots(self, env, var, name, title):
 
         fig = plt.figure(figsize=(15, 13))
         proj = self._proj
-
         nrows, ncols = 1, 1
-        if compare:
-            nrows, ncols = 2, 1
 
         ax1 = plt.subplot(nrows, ncols, 1, projection=proj)
         # call the setup_map convenience function to get the basics into the map
@@ -105,21 +104,6 @@ class SurfaceFields_model(OceanDiagnosticPlot):
         # also label contour lines. This is matplotlib directly.
         ax1.clabel(cs, inline=1, fontsize=10, fmt='%d')  # add labels to contours
 
-        if compare:
-            ax2 = plt.subplot(nrows, ncols, 2, projection=proj)
-            # call the setup_map convenience function to get the basics into the map
-            # this returns a dictionary of items to input to your subsequent plotting calls
-            pargs, oargs = rplt.setup_map(ax=ax2, title=title, titlesize=env['fig_titlesize'],
-                                          xticks=np.arange(-95, -75, 5),
-                                          ticklabelsize=env['fig_ticksize'],
-                                          subargs={'label': 'a', 'loc': 'bottom left'})
-
-            var2.cmo.cfpcolormesh(**pargs)
-            # also plot contour lines on top. This is matplotlib wrapped by xarray with cf-xarray.
-            cs = var2.cf.plot.contour(**pargs, colors='k', linewidths=1)
-            # also label contour lines. This is matplotlib directly.
-            ax2.clabel(cs, inline=1, fontsize=10, fmt='%d')  # add labels to contours
-
         #ds.sel(time=time)['air'].plot()
 
         filename = '{0}/{1}.png'.format(self._plotdir, name)
@@ -129,14 +113,14 @@ class SurfaceFields_model(OceanDiagnosticPlot):
 
 
 
-class SurfaceFields_obs(SurfaceFields_model):
+class ContourDepths_obs(ContourDepths_model):
 
     def __init__(self):
-        super(SurfaceFields_obs, self).__init__()
+        super(ContourDepths_obs, self).__init__()
         self._ncl = ['ssh.ncl', 'field_2d.ncl', 'field_2d_za.ncl']
 
-class SurfaceFields_control(SurfaceFields_model):
+class ContourDepths_control(ContourDepths_model):
 
     def __init__(self):
-        super(SurfaceFields_control, self).__init__()
+        super(ContourDepths_control, self).__init__()
         self._ncl = ['field_2d_diff.ncl', 'field_2d_za_diff.ncl']

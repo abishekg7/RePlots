@@ -257,3 +257,7 @@ def createDiagPlots(dataset, diag_dir, case, avglist,
     # update the env_diags_ocn.xml with OCNIAG_WEBDIR settings to be used by the copy_html utility
 
 
+def prereqs(ds):
+    ds['sst'] = ds.temp.cf.isel(Z=-1)
+    ds['eke'] = ds.xroms.EKE
+    ds['mld'] = ds.xroms.mld(thresh=0.03)

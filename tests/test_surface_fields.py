@@ -41,5 +41,6 @@ def test_generate_plots():
     tasks = plot.generate_plots(dataset, envDict)
 
     dask.compute(tasks, scheduler='processes', num_workers=4)
+    #dask.compute(tasks)  #doesn't work
 
-    assert False
+    assert True
