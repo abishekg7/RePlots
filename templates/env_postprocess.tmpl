@@ -1,26 +1,32 @@
 <?xml version="1.0"?>
 
 <config_definition>
-
 <!-- ======================================================================= -->
-<!-- env_postprocess.xml                                                     -->
+<!-- env_postprocess.xml                                               -->
 <!-- ======================================================================= -->
 
-
-{% for group in group_list %}
-  {% for k,v in group.items() %}
-    {% if k == 'comment' %}
-       {% set comment = v %}
-    {% elif k == 'xml_list' %}
+{% for xml in xml_list -%}
 <!-- ======================================================================= -->
-<!-- {{ comment }} -->
+<!-- {{ xml._desc }} -->
+<!-- ======================================================================= -->
+<entry id="{{ xml._id }}" value="{{ xml._value }}" />
+{%- endfor %}
+{%- for group in group_list %}
+<!-- ======================================================================= -->
+  {%- for k,v in group.items() %}
+    {%- if k == 'name' %}
+<!-- {{ v -}}:
+    {%- elif k == 'comment' %}
+{{- v }} -->
+    {%- elif k == 'xml_list' %}
 <!-- ======================================================================= -->
        {% for xml in v %}
-<!-- Description: {{ xml._desc }} --> 
+<!-- Description:  {{ xml._desc }} -->
+<!-- Valid Values: {{ xml._valid_values }} -->
 <entry id="{{ xml._id }}" value="{{ xml._value }}" />
        {% endfor %}
-    {% endif %}
-  {% endfor %}
+    {%- endif %}
+  {%- endfor %}
 {% endfor %}
-<!-- ====================================== -->
+
 </config_definition>
